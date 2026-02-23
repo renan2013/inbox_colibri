@@ -50,7 +50,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $tipo = trim($_POST["tipo"]);
     $link_acceso = trim($_POST["link_acceso"]);
     $datos_link = trim($_POST["datos_link"]);
+    $id_formulario = isset($_POST['id_formulario']) && !empty($_POST['id_formulario']) ? $_POST['id_formulario'] : null;
     $creado_por = $_SESSION["id"];
+
+    // Procesar campos dinámicos si existen y concatenarlos a datos_link
+    $campos_dinamicos_str = "";
+    foreach ($_POST as $key => $value) {
+        if (strpos($key, 'dyn_field_') === 0) {
+            $id_campo = str_replace('dyn_field_', '', $key);
+            // Obtener nombre del campo para que el texto sea legible
+            $sql_c = "SELECT nombre_campo FROM formularios_campos WHERE id = ?";
+            if ($stmt_c = $mysqli->prepare($sql_c)) {
+                $stmt_c->bind_param("i", $id_campo);
+                $stmt_c->execute();
+                $res_c = $stmt_c->get_result();
+                if ($row_c = $res_c->fetch_assoc()) {
+                    $campos_dinamicos_str .= "\n" . $row_c['nombre_campo'] . ": " . trim($value);
+                }
+                $stmt_c->close();
+            }
+        }
+    }
+
+    if (!empty($campos_dinamicos_str)) {
+        $datos_link .= (!empty($datos_link) ? "\n--- DATOS ADICIONALES ---" : "DATOS DE LA PLANTILLA:") . $campos_dinamicos_str;
+    }
 
     // Validar que la conexión exista
     if ($mysqli) {
@@ -252,6 +276,29 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                 </div>
                 <div class="modal-body">
                     
+                    <div class="mb-3 border-bottom pb-3">
+                        <label class="form-label text-primary fw-bold"><i class="bi bi-ui-checks"></i> Elegir Plantilla / Sub-Módulo (Opcional)</label>
+                        <select name="id_formulario" id="selectSubModulo" class="form-select border-primary" onchange="cargarCamposDinamicos()">
+                            <option value="">-- Credencial Estándar --</option>
+                            <?php 
+                            // Obtener formularios dinámicos
+                            $sql_forms_list = "SELECT id, nombre FROM formularios WHERE activo = 1 ORDER BY nombre";
+                            $result_forms_list = $mysqli->query($sql_forms_list);
+                            if ($result_forms_list && $result_forms_list->num_rows > 0) {
+                                while($f_row = $result_forms_list->fetch_assoc()) {
+                                    echo '<option value="' . $f_row['id'] . '">' . htmlspecialchars($f_row['nombre']) . '</option>';
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <!-- Contenedor de Campos Dinámicos -->
+                    <div id="contenedorCamposDinamicos" class="bg-light p-3 rounded mb-3" style="display:none;">
+                        <h6 class="text-muted mb-3">Campos de la Plantilla:</h6>
+                        <div id="dynamicFieldsBody"></div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Plataforma (Autocompleta el Link)</label>
                         <select id="selectPlataforma" class="form-select" onchange="actualizarLink()">
@@ -423,6 +470,30 @@ function confirmarEliminacion(id) {
             window.location.href = '?delete=' + id;
         }
     });
+}
+
+function cargarCamposDinamicos() {
+    const idForm = document.getElementById('selectSubModulo').value;
+    const contenedor = document.getElementById('contenedorCamposDinamicos');
+    const dynamicBody = document.getElementById('dynamicFieldsBody');
+
+    if (idForm) {
+        contenedor.style.display = 'block';
+        dynamicBody.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
+        
+        fetch('get_dynamic_fields.php?id_form=' + idForm)
+            .then(response => response.text())
+            .then(html => {
+                dynamicBody.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                dynamicBody.innerHTML = '<p class="text-danger small">Error al cargar campos.</p>';
+            });
+    } else {
+        contenedor.style.display = 'none';
+        dynamicBody.innerHTML = '';
+    }
 }
 
 function actualizarLink() {
