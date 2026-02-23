@@ -1,9 +1,9 @@
 <?php
 date_default_timezone_set('America/Costa_Rica'); // Set timezone for Costa Rica
 define('DB_SERVER', 'localhost');
-define('DB_USERNAME', 'u419870110_bpm'); // Cambia esto por tu usuario de MySQL
-define('DB_PASSWORD', 'Bpm_unela_2025'); // Cambia esto por tu contraseña
-define('DB_NAME', 'u419870110_bpm');
+define('DB_USERNAME', 'u400283574_colibri'); // Cambia esto por tu usuario de MySQL
+define('DB_PASSWORD', 'Colibri2026'); // Cambia esto por tu contraseña
+define('DB_NAME', 'u400283574_colibri');
 
 /* Intenta conectar a la base de datos */
 $mysqli = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
