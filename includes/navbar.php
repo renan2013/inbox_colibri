@@ -94,6 +94,7 @@ $uris_registro = [
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>registrar_usuario.php">Registrar Usuario</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_usuarios.php">Lista de Usuarios</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_etiquetas.php">Etiquetas de Tareas</a></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>modulos_dinamicos/index.php">Sub-Módulos Dinámicos</a></li>
                             <!--
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/crear_expediente_digital.php">Crear Expediente Digital</a></li>
                             -->
