@@ -1,20 +1,18 @@
 <?php
-ob_start(); // INICIA EL BUFFER DE SALIDA: Crucial para evitar pantallas blancas por headers
+ob_start(); // INICIA EL BUFFER DE SALIDA
 session_start();
 
-// Configuración de errores para depuración (si sigue fallando, veremos el error)
+// Configuración de errores para depuración
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Definir ruta base segura
 define('PROJECT_ROOT', dirname(__DIR__)); 
 
 require_once PROJECT_ROOT . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/db_connect.php';
 require_once PROJECT_ROOT . '/includes/permissions.php';
 
-// Proteger la página
 if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     header("location: " . BASE_URL . "login.php");
     exit;
@@ -24,27 +22,15 @@ $page_title = 'Gestión de Soporte';
 $message = "";
 $message_type = "";
 
-// --- LÓGICA DE PROCESAMIENTO ---
-
-// Capturar mensajes de redirección
-if (isset($_GET['msg'])) {
-    if ($_GET['msg'] == 'saved') {
-        $message = "Registro guardado con éxito.";
-        $message_type = "success";
-    } elseif ($_GET['msg'] == 'platform_saved') {
-        $message = "Plataforma registrada con éxito.";
-        $message_type = "success";
-    } elseif ($_GET['msg'] == 'deleted') {
-        $message = "Registro eliminado.";
-        $message_type = "warning";
-    } elseif ($_GET['msg'] == 'error') {
-        $message = "Ocurrió un error al procesar la solicitud.";
-        $message_type = "danger";
-    }
+// LOG DE DEPURACIÓN (Se creará un archivo debug_soporte.log en esta carpeta)
+function debug_log($text) {
+    file_put_contents('debug_soporte.log', date('[Y-m-d H:i:s] ') . $text . PHP_EOL, FILE_APPEND);
 }
 
-// 1. Guardar Credencial / Soporte
+// 1. Guardar Registro
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save') {
+    debug_log("Iniciando guardado. Datos recibidos: " . json_encode($_POST));
+    
     $usuario = trim($_POST["usuario"] ?? "");
     $clave = trim($_POST["clave"] ?? "");
     $tipo = trim($_POST["tipo"] ?? "Soporte");
@@ -54,47 +40,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $static_data = isset($_POST['static_data_hidden']) ? trim($_POST['static_data_hidden']) : "";
     $creado_por = $_SESSION["id"];
 
-    // Si es un formulario dinámico, permitimos que usuario y clave estándar sean opcionales en la UI
+    // Manejo de campos dinámicos
     if (!empty($id_formulario) && $id_formulario !== 'estandar') {
         if (empty($usuario)) $usuario = "-";
         if (empty($clave)) $clave = "-";
-        if (empty($tipo) || $tipo == "") $tipo = "Plantilla";
-    }
-
-    // Procesar campos dinámicos si existen y concatenarlos a datos_link
-    $campos_dinamicos_str = "";
-    foreach ($_POST as $key => $value) {
-        if (strpos($key, 'dyn_field_') === 0) {
-            $id_campo = str_replace('dyn_field_', '', $key);
-            
-            // Obtener configuración del campo (nombre y mapeo)
-            $sql_c = "SELECT nombre_campo, mapeo FROM formularios_campos WHERE id = ?";
-            if ($stmt_c = $mysqli->prepare($sql_c)) {
-                $stmt_c->bind_param("i", $id_campo);
-                $stmt_c->execute();
-                $res_c = $stmt_c->get_result();
-                if ($row_c = $res_c->fetch_assoc()) {
-                    $val_trim = trim($value);
-                    $campos_dinamicos_str .= "\n" . $row_c['nombre_campo'] . ": " . $val_trim;
-                    
-                    // APLICAR MAPEO A LOS INPUTS FINALES
-                    if ($row_c['mapeo'] == 'usuario' && !empty($val_trim)) {
-                        $usuario = $val_trim;
-                    } elseif ($row_c['mapeo'] == 'clave' && !empty($val_trim)) {
-                        $clave = $val_trim;
+        if (empty($tipo) || $tipo == "Soporte") $tipo = "Plantilla";
+        
+        $campos_dinamicos_str = "";
+        foreach ($_POST as $key => $value) {
+            if (strpos($key, 'dyn_field_') === 0) {
+                $id_campo = str_replace('dyn_field_', '', $key);
+                $sql_c = "SELECT nombre_campo, mapeo FROM formularios_campos WHERE id = ?";
+                if ($stmt_c = $mysqli->prepare($sql_c)) {
+                    $stmt_c->bind_param("i", $id_campo);
+                    $stmt_c->execute();
+                    $res_c = $stmt_c->get_result();
+                    if ($row_c = $res_c->fetch_assoc()) {
+                        $val_trim = trim($value);
+                        $campos_dinamicos_str .= "\n" . $row_c['nombre_campo'] . ": " . $val_trim;
+                        if ($row_c['mapeo'] == 'usuario' && !empty($val_trim)) $usuario = $val_trim;
+                        elseif ($row_c['mapeo'] == 'clave' && !empty($val_trim)) $clave = $val_trim;
                     }
+                    $stmt_c->close();
                 }
-                $stmt_c->close();
             }
         }
-    }
-
-    if (!empty($campos_dinamicos_str)) {
-        $datos_link .= (!empty($datos_link) ? "\n--- DATOS DEL FORMULARIO ---\n" : "") . $campos_dinamicos_str;
-    }
-
-    if (!empty($static_data)) {
-        $datos_link .= "\n\n--- INFORMACIÓN ADICIONAL ---\n" . $static_data;
+        if (!empty($campos_dinamicos_str)) {
+            $datos_link .= (!empty($datos_link) ? "\n--- DATOS DEL FORMULARIO ---\n" : "") . $campos_dinamicos_str;
+        }
+        if (!empty($static_data)) {
+            $datos_link .= "\n\n--- INFORMACIÓN ADICIONAL ---\n" . $static_data;
+        }
     }
 
     if ($mysqli) {
@@ -102,50 +78,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("sssssi", $usuario, $clave, $tipo, $link_acceso, $datos_link, $creado_por);
             if ($stmt->execute()) {
+                debug_log("Registro guardado con éxito. ID: " . $mysqli->insert_id);
                 header("Location: index.php?msg=saved");
                 exit;
             } else {
-                $message = "Error SQL: " . $stmt->error;
+                $err = "Error execute: " . $stmt->error;
+                debug_log($err);
+                $message = $err;
                 $message_type = "danger";
             }
             $stmt->close();
+        } else {
+            $err = "Error prepare: " . $mysqli->error;
+            debug_log($err);
+            $message = $err;
+            $message_type = "danger";
         }
+    } else {
+        debug_log("Error: No hay conexión a la DB.");
     }
 }
 
-// 2. Guardar Plataforma
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save_platform') {
-    $nombre_plataforma = trim($_POST["nombre_plataforma"]);
-    $link_acceso = trim($_POST["link_acceso"]);
-    
-    if ($mysqli) {
-        $sql = "INSERT INTO plataformas (nombre, link_acceso) VALUES (?, ?)";
-        if ($stmt = $mysqli->prepare($sql)) {
-            $stmt->bind_param("ss", $nombre_plataforma, $link_acceso);
-            if ($stmt->execute()) {
-                header("Location: index.php?msg=platform_saved");
-                exit;
-            }
-            $stmt->close();
-        }
-    }
-}
-
-// 3. Eliminar Credencial
+// Eliminar
 if (isset($_GET['delete']) && ctype_digit($_GET['delete'])) {
     $id_del = $_GET['delete'];
-    $sql_del = "DELETE FROM credenciales WHERE id_credencial = ?";
-    if ($stmt_del = $mysqli->prepare($sql_del)) {
-        $stmt_del->bind_param("i", $id_del);
-        if ($stmt_del->execute()) {
-            header("Location: index.php?msg=deleted");
-            exit;
-        }
-        $stmt_del->close();
-    }
+    $mysqli->query("DELETE FROM credenciales WHERE id_credencial = $id_del");
+    header("Location: index.php?msg=deleted");
+    exit;
 }
 
-// Listado de datos
+// Listado
 $sql_creds = "SELECT c.*, u.nombre as creador_nombre,
               (SELECT nombre FROM plataformas p WHERE TRIM(LOWER(p.link_acceso)) = TRIM(LOWER(c.link_acceso)) LIMIT 1) as nombre_plataforma 
               FROM credenciales c 
@@ -153,216 +115,112 @@ $sql_creds = "SELECT c.*, u.nombre as creador_nombre,
               ORDER BY c.fecha DESC";
 $result_creds = $mysqli->query($sql_creds);
 
+$sql_forms_list = "SELECT id, nombre FROM formularios WHERE activo = 1 ORDER BY nombre";
+$result_forms_list = $mysqli->query($sql_forms_list);
+
 $sql_platforms = "SELECT * FROM plataformas ORDER BY nombre";
 $result_platforms = $mysqli->query($sql_platforms);
 
-// --- VISTA ---
 require_once PROJECT_ROOT . '/includes/header.php';
 require_once PROJECT_ROOT . '/includes/navbar.php';
 ?>
 
 <div class="container mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>dashboard.php">Inicio</a></li>
-            <li class="breadcrumb-item active">Gestión de Soporte</li>
-            <li class="breadcrumb-item"><a href="#" data-bs-toggle="modal" data-bs-target="#modalNuevaPlataforma" class="text-decoration-none"><i class="bi bi-globe"></i> Registrar Plataforma</a></li>
-        </ol>
-    </nav>
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-shield-lock"></i> Gestión de Soporte</h2>
-        <div>
-            <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalNuevaCredencial">
-                <i class="bi bi-headset"></i> Soporte
-            </button>
-        </div>
+        <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalNuevaCredencial">
+            <i class="bi bi-headset"></i> Soporte
+        </button>
     </div>
 
     <?php if(!empty($message)): ?>
-        <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
-            <?php echo $message; ?>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> <?php echo $message; ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
-    <div class="row" id="contenedorCredenciales">
+    <?php if(isset($_GET['msg'])): ?>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <?php echo ($_GET['msg'] == 'saved') ? 'Registro guardado correctamente.' : 'Acción realizada.'; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <div class="row">
         <?php if ($result_creds && $result_creds->num_rows > 0): ?>
             <?php while($row = $result_creds->fetch_assoc()): ?>
                 <div class="col-md-3 mb-3">
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-primary me-2"><?php echo htmlspecialchars($row['tipo']); ?></span>
-                                <?php if(!empty($row['nombre_plataforma'])): ?>
-                                    <small class="text-white"><i class="bi bi-globe"></i> <?php echo htmlspecialchars($row['nombre_plataforma']); ?></small>
-                                <?php endif; ?>
-                            </div>
+                            <span class="badge bg-primary"><?php echo htmlspecialchars($row['tipo']); ?></span>
                             <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-light border-0" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-three-dots-vertical"></i>
-                                </button>
+                                <button class="btn btn-sm btn-outline-light border-0" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item text-danger" href="javascript:void(0);" onclick="confirmarEliminacion(<?php echo $row['id_credencial']; ?>)"><i class="bi bi-trash"></i> Eliminar</a></li>
+                                    <li><a class="dropdown-item text-danger" href="?delete=<?php echo $row['id_credencial']; ?>" onclick="return confirm('¿Eliminar?')">Eliminar</a></li>
                                 </ul>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="mb-2">
-                                <small class="text-muted d-block">Usuario</small>
-                                <div class="input-group">
-                                    <input type="text" class="form-control form-control-sm bg-light" value="<?php echo htmlspecialchars($row['usuario']); ?>" readonly>
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="copiarTexto('<?php echo addslashes($row['usuario']); ?>')"><i class="bi bi-clipboard"></i></button>
-                                </div>
+                            <small class="text-muted">Usuario</small>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="text" class="form-control bg-light" value="<?php echo htmlspecialchars($row['usuario']); ?>" readonly>
+                                <button class="btn btn-outline-secondary" onclick="copiarTexto('<?php echo addslashes($row['usuario']); ?>')"><i class="bi bi-clipboard"></i></button>
                             </div>
-                            <div class="mb-3">
-                                <small class="text-muted d-block">Contraseña</small>
-                                <div class="input-group">
-                                    <input type="password" class="form-control form-control-sm bg-light" value="<?php echo htmlspecialchars($row['clave']); ?>" id="pass_<?php echo $row['id_credencial']; ?>" readonly>
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="togglePassword(<?php echo $row['id_credencial']; ?>)"><i class="bi bi-eye" id="eye_<?php echo $row['id_credencial']; ?>"></i></button>
-                                    <button class="btn btn-outline-secondary btn-sm" onclick="copiarTexto('<?php echo addslashes($row['clave']); ?>')"><i class="bi bi-clipboard"></i></button>
-                                </div>
+                            <small class="text-muted">Contraseña</small>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="password" class="form-control bg-light" value="<?php echo htmlspecialchars($row['clave']); ?>" id="p_<?php echo $row['id_credencial']; ?>" readonly>
+                                <button class="btn btn-outline-secondary" onclick="togglePassword(<?php echo $row['id_credencial']; ?>)"><i class="bi bi-eye"></i></button>
+                                <button class="btn btn-outline-secondary" onclick="copiarTexto('<?php echo addslashes($row['clave']); ?>')"><i class="bi bi-clipboard"></i></button>
                             </div>
-                            <?php if(!empty($row['link_acceso'])): ?>
-                                <a href="<?php echo htmlspecialchars($row['link_acceso']); ?>" target="_blank" class="btn btn-sm btn-link p-0 mb-2 text-decoration-none"><i class="bi bi-link-45deg"></i> Acceder al sitio</a>
-                            <?php endif; ?>
                             <p class="card-text small text-muted" style="white-space: pre-wrap;"><?php echo htmlspecialchars($row['datos_link']); ?></p>
                         </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <div class="d-grid gap-2 mb-2">
-                                <?php 
-                                $titulo_plataforma = !empty($row['nombre_plataforma']) ? $row['nombre_plataforma'] : 'COLIBRÍ VIRTUAL';
-                                $notas_js = str_replace(array("\r", "\n"), " ", $row['datos_link']);
-                                ?>
-                                <button class="btn btn-success btn-sm" onclick="compartirWhatsApp('<?php echo addslashes($titulo_plataforma); ?>', '<?php echo addslashes($row['usuario']); ?>', '<?php echo addslashes($row['clave']); ?>', '<?php echo addslashes($row['link_acceso']); ?>', '<?php echo addslashes($row['tipo']); ?>', '<?php echo addslashes($_SESSION['nombre']); ?>', '<?php echo addslashes($notas_js); ?>')">
-                                    <i class="bi bi-whatsapp"></i> Compartir por WhatsApp
-                                </button>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted fst-italic" style="font-size: 0.75rem;">
-                                    <i class="bi bi-person-check"></i> Atendido por: 
-                                    <strong><?php echo htmlspecialchars(!empty($row['creador_nombre']) ? $row['creador_nombre'] : 'Sistema'); ?></strong><br>
-                                    <i class="bi bi-clock"></i> <?php echo date("d/m/Y H:i", strtotime($row['fecha'])); ?>
-                                </small>
-                            </div>
+                        <div class="card-footer bg-transparent">
+                            <button class="btn btn-success btn-sm w-100" onclick="compartirWhatsApp('<?php echo addslashes($row['tipo']); ?>', '<?php echo addslashes($row['usuario']); ?>', '<?php echo addslashes($row['clave']); ?>', '<?php echo addslashes($row['link_acceso']); ?>', '<?php echo addslashes($row['tipo']); ?>', '<?php echo addslashes($_SESSION['nombre']); ?>', '<?php echo addslashes(str_replace(["\r","\n"], " ", $row['datos_link'])); ?>')">
+                                <i class="bi bi-whatsapp"></i> WhatsApp
+                            </button>
                         </div>
                     </div>
                 </div>
             <?php endwhile; ?>
         <?php else: ?>
-            <div class="col-12 text-center py-5">
-                <i class="bi bi-inbox text-muted display-1"></i>
-                <p class="text-muted mt-3">No hay registros de soporte aún.</p>
-            </div>
+            <div class="col-12 text-center py-5"><p class="text-muted">No hay registros.</p></div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- Modal Nueva Credencial -->
 <div class="modal fade" id="modalNuevaCredencial" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+            <form action="index.php" method="post" id="formSoporte">
                 <input type="hidden" name="action" value="save">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-headset"></i> Gestión de Soporte</h5>
+                    <h5 class="modal-title">Gestión de Soporte</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label text-primary fw-bold">Seleccionar Tipo de Soporte / Plantilla</label>
-                        <select name="id_formulario" id="selectSubModulo" class="form-select form-select-lg border-primary" onchange="cargarCamposDinamicos()">
+                        <label class="form-label fw-bold">Seleccionar Plantilla</label>
+                        <select name="id_formulario" id="selectSubModulo" class="form-select" onchange="cargarCamposDinamicos()">
                             <option value="">-- Seleccionar --</option>
-                            <option value="estandar">Registro Manual (Estándar)</option>
+                            <option value="estandar">Registro Manual</option>
                             <?php 
                             mysqli_data_seek($result_forms_list, 0);
-                            while($f_row = $result_forms_list->fetch_assoc()) {
-                                echo '<option value="' . $f_row['id'] . '">' . htmlspecialchars($f_row['nombre']) . '</option>';
-                            }
+                            while($f = $result_forms_list->fetch_assoc()) echo '<option value="'.$f['id'].'">'.htmlspecialchars($f['nombre']).'</option>';
                             ?>
                         </select>
                     </div>
-
-                    <div id="contenedorCamposDinamicos" class="bg-light p-3 rounded mb-3" style="display:none;">
-                        <h6 class="text-muted mb-3 border-bottom pb-2">Campos requeridos:</h6>
+                    <div id="contenedorCamposDinamicos" style="display:none;" class="bg-light p-3 rounded mb-3">
                         <div id="dynamicFieldsBody"></div>
                     </div>
-
                     <div class="campo-estandar" style="display:none;">
-                        <div class="mb-3">
-                            <label class="form-label text-muted small">Plataforma (Opcional)</label>
-                            <select id="selectPlataforma" class="form-select form-select-sm" onchange="actualizarLink()">
-                                <option value="">-- Seleccionar --</option>
-                                <?php 
-                                if ($result_platforms && $result_platforms->num_rows > 0) {
-                                    mysqli_data_seek($result_platforms, 0);
-                                    while($plat = $result_platforms->fetch_assoc()) {
-                                        echo '<option value="' . htmlspecialchars($plat['link_acceso']) . '">' . htmlspecialchars($plat['nombre']) . '</option>';
-                                    }
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tipo de Acción</label>
-                            <select name="tipo" class="form-select">
-                                <option value="Cuenta Nueva">Cuenta Nueva</option>
-                                <option value="Cambio de contraseña">Cambio de contraseña</option>
-                                <option value="Actualización de datos">Actualización de datos</option>
-                                <option value="Hosting / Web">Hosting / Web</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Usuario</label>
-                            <input type="text" name="usuario" class="form-control" placeholder="Ej: juan.perez">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Contraseña</label>
-                            <input type="text" name="clave" class="form-control" placeholder="Ej: Clave123">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Link de Acceso</label>
-                            <input type="url" name="link_acceso" id="inputLinkAcceso" class="form-control" placeholder="https://...">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Notas Adicionales</label>
-                            <textarea name="datos_link" class="form-control" rows="2"></textarea>
-                        </div>
+                        <input type="text" name="usuario" class="form-control mb-2" placeholder="Usuario">
+                        <input type="text" name="clave" class="form-control mb-2" placeholder="Contraseña">
+                        <textarea name="datos_link" class="form-control" placeholder="Notas"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnGuardarCredencial">Guardar Registro</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Nueva Plataforma -->
-<div class="modal fade" id="modalNuevaPlataforma" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-                <input type="hidden" name="action" value="save_platform">
-                <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title">Registrar Nueva Plataforma</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nombre de la Plataforma</label>
-                        <input type="text" name="nombre_plataforma" class="form-control" placeholder="Ej: Zoom Pro, Moodle, cPanel" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Link de Acceso</label>
-                        <input type="url" name="link_acceso" class="form-control" placeholder="https://..." required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Plataforma</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">Guardar</button>
                 </div>
             </form>
         </div>
@@ -370,97 +228,27 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const formCred = document.querySelector('#modalNuevaCredencial form');
-    if (formCred) {
-        formCred.addEventListener('submit', function() {
-            const btn = document.getElementById('btnGuardarCredencial');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
-            }
-        });
-    }
-});
-
-function copiarTexto(texto) {
-    navigator.clipboard.writeText(texto).then(() => {
-        const Toast = Swal.mixin({
-            toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true
-        });
-        Toast.fire({ icon: 'success', title: 'Copiado al portapapeles' });
-    });
+function copiarTexto(t) { navigator.clipboard.writeText(t); }
+function togglePassword(id) { 
+    const i = document.getElementById('p_' + id); 
+    i.type = i.type === "password" ? "text" : "password"; 
 }
-
-function togglePassword(id) {
-    const input = document.getElementById('pass_' + id);
-    const eye = document.getElementById('eye_' + id);
-    if (input.type === "password") {
-        input.type = "text"; eye.classList.replace('bi-eye', 'bi-eye-slash');
-    } else {
-        input.type = "password"; eye.classList.replace('bi-eye-slash', 'bi-eye');
-    }
-}
-
-function compartirWhatsApp(plataforma, usuario, clave, link, tipo_accion, attendee, notas) {
-    let titulo = plataforma.toUpperCase();
-    let ahora = new Date();
-    let fechaHora = ahora.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-    let mensaje = `🏛️ *${titulo}*\n\nHola! Aquí están tus datos para *${tipo_accion}*:\n\n` +
-                  `────────────────\n` +
-                  `👤 USUARIO: *${usuario}*\n` +
-                  `🔑 CLAVE: *${clave}*\n` +
-                  `────────────────`;
-    if (link) mensaje += `\n\n🔗 *Link:* ${link}`;
-    else mensaje += `\n\n🔗 *Link:* https://renangalvan.net/inbox_colibri/`;
-    if (notas && notas.trim() !== '') mensaje += `\n\n📝 *Notas:* ${notas}`;
-    mensaje += `\n\n_Atendido por: ${attendee} el ${fechaHora}_`;
-    navigator.clipboard.writeText(mensaje).then(() => {
-        Swal.fire({
-            title: '¡Mensaje Copiado!', html: 'El mensaje ya está en tu portapapeles.<br>Pégalo en WhatsApp (Ctrl+V).',
-            icon: 'success', confirmButtonText: 'Entendido', confirmButtonColor: '#25D366'
-        });
-    });
-}
-
-function confirmarEliminacion(id) {
-    Swal.fire({
-        title: '¿Estás seguro?', text: "¡No podrás revertir esto!", icon: 'warning',
-        showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
-    }).then((result) => { if (result.isConfirmed) window.location.href = '?delete=' + id; });
-}
-
 function cargarCamposDinamicos() {
-    const idForm = document.getElementById('selectSubModulo').value;
-    const contenedor = document.getElementById('contenedorCamposDinamicos');
-    const dynamicBody = document.getElementById('dynamicFieldsBody');
-    const camposEstandar = document.querySelectorAll('.campo-estandar');
-
-    if (idForm === 'estandar') {
-        contenedor.style.display = 'none'; dynamicBody.innerHTML = '';
-        camposEstandar.forEach(div => div.style.display = 'block');
-    } else if (idForm !== '') {
-        contenedor.style.display = 'block'; camposEstandar.forEach(div => div.style.display = 'none');
-        dynamicBody.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
-        fetch('get_dynamic_fields.php?id_form=' + idForm)
-            .then(response => response.text())
-            .then(html => { dynamicBody.innerHTML = html; })
-            .catch(() => { dynamicBody.innerHTML = '<p class="text-danger small">Error al cargar campos.</p>'; });
+    const v = document.getElementById('selectSubModulo').value;
+    const c = document.getElementById('contenedorCamposDinamicos');
+    const e = document.querySelectorAll('.campo-estandar');
+    if (v === 'estandar') {
+        c.style.display = 'none'; e.forEach(x => x.style.display = 'block');
+    } else if (v !== '') {
+        c.style.display = 'block'; e.forEach(x => x.style.display = 'none');
+        fetch('get_dynamic_fields.php?id_form=' + v).then(r => r.text()).then(h => { document.getElementById('dynamicFieldsBody').innerHTML = h; });
     } else {
-        contenedor.style.display = 'none'; dynamicBody.innerHTML = '';
-        camposEstandar.forEach(div => div.style.display = 'none');
+        c.style.display = 'none'; e.forEach(x => x.style.display = 'none');
     }
 }
-
-function actualizarLink() {
-    const selector = document.getElementById('selectPlataforma');
-    const inputLink = document.getElementById('inputLinkAcceso');
-    if (selector.value) inputLink.value = selector.value;
+function compartirWhatsApp(p, u, c, l, t, a, n) {
+    let msg = `*${p.toUpperCase()}*\n\nUsuario: *${u}*\nClave: *${c}*\n\nNotas: ${n}\n\n_Atendido por: ${a}_`;
+    navigator.clipboard.writeText(msg).then(() => { alert('Copiado para WhatsApp'); });
 }
 </script>
-
-<?php 
-require_once PROJECT_ROOT . '/includes/footer.php'; 
-ob_end_flush();
-?>
+<?php require_once PROJECT_ROOT . '/includes/footer.php'; ?>
