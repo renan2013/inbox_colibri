@@ -93,6 +93,7 @@ $uris_registro = [
                             -->
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>registrar_usuario.php">Registrar Usuario</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_usuarios.php">Lista de Usuarios</a></li>
+                            <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_etiquetas.php">Etiquetas de Tareas</a></li>
                             <!--
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/crear_expediente_digital.php">Crear Expediente Digital</a></li>
                             -->
@@ -113,10 +114,6 @@ $uris_registro = [
                             -->
 
                             <?php if(has_permission($mysqli, 'gestionar_plantillas') || has_permission($mysqli, 'gestionar_saludos')): ?>
-                                <li><hr class="dropdown-divider"></li>
-                                <?php if(has_permission($mysqli, 'gestionar_etiquetas')): ?>
-                                    <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_etiquetas.php">Etiquetas de Tareas</a></li>
-                                <?php endif; ?>
                                 
                                 <?php if(has_permission($mysqli, 'gestionar_saludos')): ?>
                                     <li><hr class="dropdown-divider"></li>
