@@ -188,8 +188,8 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="bi bi-shield-lock"></i> Gestión de Credenciales</h2>
         <div>
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaCredencial">
-                <i class="bi bi-plus-lg"></i> Nueva Credencial
+            <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalNuevaCredencial">
+                <i class="bi bi-headset"></i> Soporte
             </button>
         </div>
     </div>
@@ -294,16 +294,17 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
         <div class="modal-content">
             <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
                 <input type="hidden" name="action" value="save">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title">Registrar Nueva Credencial</h5>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-headset"></i> Gestión de Soporte</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     
-                    <div class="mb-3 border-bottom pb-3">
-                        <label class="form-label text-primary fw-bold"><i class="bi bi-ui-checks"></i> Elegir Plantilla / Sub-Módulo (Opcional)</label>
-                        <select name="id_formulario" id="selectSubModulo" class="form-select border-primary" onchange="cargarCamposDinamicos()">
-                            <option value="">-- Credencial Estándar --</option>
+                    <div class="mb-3">
+                        <label class="form-label text-primary fw-bold">Seleccionar Tipo de Soporte / Plantilla</label>
+                        <select name="id_formulario" id="selectSubModulo" class="form-select form-select-lg border-primary" onchange="cargarCamposDinamicos()">
+                            <option value="">-- Seleccionar --</option>
+                            <option value="estandar">Registro Manual (Estándar)</option>
                             <?php 
                             // Obtener formularios dinámicos
                             $sql_forms_list = "SELECT id, nombre FROM formularios WHERE activo = 1 ORDER BY nombre";
@@ -319,52 +320,55 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
 
                     <!-- Contenedor de Campos Dinámicos -->
                     <div id="contenedorCamposDinamicos" class="bg-light p-3 rounded mb-3" style="display:none;">
-                        <h6 class="text-muted mb-3">Campos de la Plantilla:</h6>
+                        <h6 class="text-muted mb-3 border-bottom pb-2">Campos requeridos:</h6>
                         <div id="dynamicFieldsBody"></div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Plataforma (Autocompleta el Link)</label>
-                        <select id="selectPlataforma" class="form-select" onchange="actualizarLink()">
-                            <option value="">-- Seleccionar Plataforma --</option>
-                            <?php 
-                            if ($result_platforms && $result_platforms->num_rows > 0) {
-                                while($plat = $result_platforms->fetch_assoc()) {
-                                    // VALUE es el LINK, TEXT es el NOMBRE
-                                    echo '<option value="' . htmlspecialchars($plat['link_acceso']) . '">' . htmlspecialchars($plat['nombre']) . '</option>';
+                    <!-- Campos Estándar (Ocultos por defecto) -->
+                    <div class="campo-estandar" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Plataforma (Opcional)</label>
+                            <select id="selectPlataforma" class="form-select form-select-sm" onchange="actualizarLink()">
+                                <option value="">-- Seleccionar --</option>
+                                <?php 
+                                if ($result_platforms && $result_platforms->num_rows > 0) {
+                                    mysqli_data_seek($result_platforms, 0); // Reiniciar puntero
+                                    while($plat = $result_platforms->fetch_assoc()) {
+                                        echo '<option value="' . htmlspecialchars($plat['link_acceso']) . '">' . htmlspecialchars($plat['nombre']) . '</option>';
+                                    }
                                 }
-                            }
-                            ?>
-                        </select>
-                    </div>
+                                ?>
+                            </select>
+                        </div>
 
-                    <div class="mb-3 campo-estandar">
-                        <label class="form-label">Tipo de Acción</label>
-                        <select name="tipo" class="form-select">
-                            <option value="Cuenta Nueva">Cuenta Nueva</option>
-                            <option value="Cambio de contraseña">Cambio de contraseña</option>
-                            <option value="Actualización de datos">Actualización de datos</option>
-                            <option value="Hosting / Web">Hosting / Web</option>
-                            <option value="Otro">Otro</option>
-                        </select>
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Acción</label>
+                            <select name="tipo" class="form-select">
+                                <option value="Cuenta Nueva">Cuenta Nueva</option>
+                                <option value="Cambio de contraseña">Cambio de contraseña</option>
+                                <option value="Actualización de datos">Actualización de datos</option>
+                                <option value="Hosting / Web">Hosting / Web</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Usuario</label>
+                            <input type="text" name="usuario" class="form-control" placeholder="Ej: juan.perez">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña</label>
+                            <input type="text" name="clave" class="form-control" placeholder="Ej: Clave123">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Link de Acceso</label>
+                            <input type="url" name="link_acceso" id="inputLinkAcceso" class="form-control" placeholder="https://...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notas Adicionales</label>
+                            <textarea name="datos_link" class="form-control" rows="2"></textarea>
+                        </div>
                     </div>
-                    <div class="mb-3 campo-estandar">
-                        <label class="form-label">Usuario</label>
-                        <input type="text" name="usuario" class="form-control" placeholder="Ej: juan.perez">
-                    </div>
-                    <div class="mb-3 campo-estandar">
-                        <label class="form-label">Contraseña</label>
-                        <input type="text" name="clave" class="form-control" placeholder="Ej: Clave123">
-                    </div>
-                    <!-- Campo LINK: Se rellena vía JS pero también se puede editar -->
-                    <div class="mb-3 campo-estandar">
-                        <label class="form-label">Link de Acceso</label>
-                        <input type="url" name="link_acceso" id="inputLinkAcceso" class="form-control" placeholder="https://...">
-                    </div>
-                    <div class="mb-3 campo-estandar">
-                        <label class="form-label">Notas Adicionales</label>
-                        <textarea name="datos_link" class="form-control" rows="2"></textarea>
-                    </div>
+                </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -500,14 +504,17 @@ function cargarCamposDinamicos() {
     const idForm = document.getElementById('selectSubModulo').value;
     const contenedor = document.getElementById('contenedorCamposDinamicos');
     const dynamicBody = document.getElementById('dynamicFieldsBody');
-    
-    // Lista de contenedores de campos estándar para ocultar
-    const camposEstándar = document.querySelectorAll('.campo-estandar');
+    const camposEstandar = document.querySelectorAll('.campo-estandar');
 
-    if (idForm) {
+    if (idForm === 'estandar') {
+        // Caso: Registro Manual
+        contenedor.style.display = 'none';
+        dynamicBody.innerHTML = '';
+        camposEstandar.forEach(div => div.style.display = 'block');
+    } else if (idForm !== '') {
+        // Caso: Plantilla Dinámica
         contenedor.style.display = 'block';
-        // Ocultar campos estándar
-        camposEstándar.forEach(div => div.style.display = 'none');
+        camposEstandar.forEach(div => div.style.display = 'none');
         
         dynamicBody.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
         
@@ -521,10 +528,10 @@ function cargarCamposDinamicos() {
                 dynamicBody.innerHTML = '<p class="text-danger small">Error al cargar campos.</p>';
             });
     } else {
+        // Caso: Ninguno seleccionado (Estado inicial)
         contenedor.style.display = 'none';
         dynamicBody.innerHTML = '';
-        // Volver a mostrar campos estándar
-        camposEstándar.forEach(div => div.style.display = 'block');
+        camposEstandar.forEach(div => div.style.display = 'none');
     }
 }
 
