@@ -358,7 +358,7 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Credencial</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarCredencial" onclick="this.disabled=true; this.innerHTML='Guardando...'; this.form.submit();">Guardar Credencial</button>
                 </div>
             </form>
         </div>

@@ -151,7 +151,7 @@ require_once '../includes/navbar.php';
                         <hr>
                         <div class="d-flex justify-content-between">
                             <a href="index.php" class="btn btn-secondary">Cancelar</a>
-                            <button type="submit" class="btn btn-success btn-lg px-5">Enviar Información</button>
+                            <button type="submit" class="btn btn-success btn-lg px-5" onclick="this.disabled=true; this.innerHTML='Enviando...'; this.form.submit();">Enviar Información</button>
                         </div>
                     </form>
                 </div>
