@@ -55,7 +55,7 @@ if(!has_permission($mysqli, 'registrar_usuarios')){
                         </form>
                     </div>
                     <div class="card-footer text-center">
-                        <small>&copy; 2025 UNELA</small>
+                        <small>&copy; 2026 Colibrí</small>
                     </div>
                 </div>
             </div>

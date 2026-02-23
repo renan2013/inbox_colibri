@@ -24,7 +24,7 @@ function sendTaskAssignmentEmail($toEmail, $toName, $taskTitle, $taskDescription
         $mail->Port = 465; // Puerto para SMTPS
 
         // Remitente
-        $mail->setFrom('renangalvan@gmail.com', 'Inbox - Unela Notificaciones'); // <<< REEMPLAZA CON TU CORREO GMAIL
+        $mail->setFrom('renangalvan@gmail.com', 'Inbox - Colibrí Notificaciones'); // <<< REEMPLAZA CON TU CORREO GMAIL
 
         // Destinatario
         $mail->addAddress($toEmail, $toName);
@@ -70,7 +70,7 @@ function sendTaskAssignmentEmail($toEmail, $toName, $taskTitle, $taskDescription
             <body>
                 <div class="container">
                     <h2>¡Hola, ' . htmlspecialchars($toName) . '!</h2>
-                    <p>Se te ha asignado una nueva tarea en Inbox Unela:</p>
+                    <p>Se te ha asignado una nueva tarea en Inbox Colibrí:</p>
                     <div class="task-details">
                         <h3>' . htmlspecialchars($taskTitle) . '</h3>
                         <p><strong>Descripción:</strong> ' . $taskDescription . '</p>
@@ -82,7 +82,7 @@ function sendTaskAssignmentEmail($toEmail, $toName, $taskTitle, $taskDescription
             </body>
             </html>
         ';
-        $mail->AltBody = 'Hola ' . $toName . ',\n\nSe te ha asignado una nueva tarea en Inbox - Unela: ' . $taskTitle . '\n\nDescripción: ' . $taskDescription . '\n\n' . strip_tags($dueDateMessage) . '\n\nPuedes ver los detalles completos de la tarea en: http://TU_DOMINIO/ver_tarea.php?id=' . $taskId . '\n\nEste es un mensaje automático, por favor no respondas a este correo.';
+        $mail->AltBody = 'Hola ' . $toName . ',\n\nSe te ha asignado una nueva tarea en Inbox - Colibrí: ' . $taskTitle . '\n\nDescripción: ' . $taskDescription . '\n\n' . strip_tags($dueDateMessage) . '\n\nPuedes ver los detalles completos de la tarea en: https://renangalvan.net/inbox_colibri/ver_tarea.php?id=' . $taskId . '\n\nEste es un mensaje automático, por favor no respondas a este correo.';
 
         $mail->send();
         // echo 'El mensaje ha sido enviado'; // Para depuración
@@ -110,7 +110,7 @@ function sendEmail($toEmail, $subject, $body) {
         $mail->Port = 465;
 
         // Remitente (reutilizado del código existente)
-        $mail->setFrom('renangalvan@gmail.com', 'UNELA Notificaciones'); // Usar un nombre más genérico
+        $mail->setFrom('renangalvan@gmail.com', 'Colibrí Notificaciones'); // Usar un nombre más genérico
 
         // Destinatario
         $mail->addAddress($toEmail); // No necesitamos el nombre del destinatario aquí, ya que el cuerpo del correo lo manejará
@@ -143,7 +143,7 @@ function sendGradeEmail($toEmail, $toName, $courseName, $grade, $gradeDetails = 
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port = 465;
 
-        $mail->setFrom('renangalvan@gmail.com', 'Registro - UNELA');
+        $mail->setFrom('renangalvan@gmail.com', 'Registro - Colibrí');
         $mail->addAddress($toEmail, $toName);
 
         $mail->isHTML(true);
@@ -207,7 +207,7 @@ function sendGradeEmail($toEmail, $toName, $courseName, $grade, $gradeDetails = 
                         <p>Si tiene alguna duda, por favor comuníquese con su profesor o con el departamento de registro.</p>
                     </div>
                     <div class="footer">
-                        <p>&copy; ' . date('Y') . ' Universidad Evangélica de las Américas (UNELA). Todos los derechos reservados.</p>
+                        <p>&copy; ' . date('Y') . ' Colibrí - Gestor de Proyectos. Todos los derechos reservados.</p>
                     </div>
                 </div>
             </body>
@@ -240,7 +240,7 @@ function sendEmailWithAttachment($toEmail, $subject, $body, $attachmentPath) {
         $mail->Port = 465;
 
         // Remitente
-        $mail->setFrom('renangalvan@gmail.com', 'UNELA BPM');
+        $mail->setFrom('renangalvan@gmail.com', 'Colibrí BPM');
 
         // Destinatario
         $mail->addAddress($toEmail);

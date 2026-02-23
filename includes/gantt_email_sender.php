@@ -21,7 +21,7 @@ function sendGanttNotificationEmail($toEmail, $toName, $subject, $body) {
         $mail->Port = 465;
 
         // Sender
-        $mail->setFrom('renangalvan@gmail.com', 'Inbox - Unela Notificaciones');
+        $mail->setFrom('renangalvan@gmail.com', 'Inbox - Colibrí Notificaciones');
 
         // Recipient
         $mail->addAddress($toEmail, $toName);

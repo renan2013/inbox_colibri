@@ -211,7 +211,7 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                             <div class="d-grid gap-2 mb-2">
                                 <?php 
                                 // Título: Plataforma o UNELA VIRTUAL por defecto
-                                $titulo_plataforma = !empty($row['nombre_plataforma']) ? $row['nombre_plataforma'] : 'UNELA VIRTUAL';
+                                $titulo_plataforma = !empty($row['nombre_plataforma']) ? $row['nombre_plataforma'] : 'COLIBRÍ VIRTUAL';
                                 // Sanitizar notas para JS (eliminar saltos de línea que rompen el onclick)
                                 $notas_js = str_replace(array("\r", "\n"), " ", $row['datos_link']);
                                 ?>
@@ -385,7 +385,7 @@ function compartirWhatsApp(plataforma, usuario, clave, link, tipo_accion, attend
     if (link) {
         mensaje += `\n\n🔗 *Link de acceso:* ${link}`;
     } else {
-        mensaje += `\n\n🔗 *Link de acceso:* http://unela.ac.cr/virtual`;
+        mensaje += `\n\n🔗 *Link de acceso:* https://renangalvan.net/inbox_colibri/`;
     }
 
     // Agregar notas si existen

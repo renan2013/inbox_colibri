@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $body .= "<br><br>Puedes ver la tarea haciendo clic en el siguiente enlace:<br>";
                 $body .= "<a href='https://renangalvan.net/inbox_colibri/ver_tarea.php?id=" . $taskId . "'>Ver Tarea</a>"; // Assuming this is the domain
                 
-                $body .= "<br><br>Saludos,<br>El equipo de DTI Unela";
+                $body .= "<br><br>Saludos,<br>El equipo de Soporte Colibrí";
 
                 if (sendGanttNotificationEmail($recipientEmail, $recipientName, $subject, $body)) {
                     $emailsSent++;
