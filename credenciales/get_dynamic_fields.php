@@ -18,14 +18,6 @@ $res_f = $stmt_f->get_result();
 $f_data = $res_f->fetch_assoc();
 $stmt_f->close();
 
-if (!empty($f_data['datos_estaticos'])) {
-    echo '<div class="alert alert-info border-0 shadow-sm mb-4">';
-    echo '<h6 class="alert-heading fw-bold small"><i class="bi bi-info-circle-fill"></i> Datos Estáticos para el Cliente:</h6>';
-    echo '<p class="mb-0 small">' . nl2br(htmlspecialchars($f_data['datos_estaticos'])) . '</p>';
-    echo '<input type="hidden" name="static_data_hidden" value="'.htmlspecialchars($f_data['datos_estaticos']).'">';
-    echo '</div>';
-}
-
 $sql = "SELECT * FROM formularios_campos WHERE id_formulario = ? ORDER BY orden, id";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $id_form);
@@ -61,6 +53,15 @@ if ($result && $result->num_rows > 0) {
     }
 } else {
     echo '<p class="text-muted small">Este sub-módulo no tiene campos definidos todavía.</p>';
+}
+
+// DATOS ESTÁTICOS AL FINAL
+if (!empty($f_data['datos_estaticos'])) {
+    echo '<div class="alert alert-light border-start border-4 border-success shadow-sm mt-4">';
+    echo '<h6 class="alert-heading fw-bold small text-success"><i class="bi bi-info-circle-fill"></i> Datos Estáticos para el Cliente:</h6>';
+    echo '<p class="mb-0 small">' . nl2br(htmlspecialchars($f_data['datos_estaticos'])) . '</p>';
+    echo '<input type="hidden" name="static_data_hidden" value="'.htmlspecialchars($f_data['datos_estaticos']).'">';
+    echo '</div>';
 }
 
 $stmt->close();

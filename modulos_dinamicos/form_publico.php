@@ -141,6 +141,13 @@ require_once '../includes/navbar.php';
                             </div>
                         <?php endforeach; ?>
 
+                        <?php if(!empty($formulario['datos_estaticos'])): ?>
+                            <div class="alert alert-light border-start border-4 border-info shadow-sm mb-4">
+                                <h6 class="fw-bold text-info"><i class="bi bi-info-circle"></i> Información Importante:</h6>
+                                <div class="small"><?php echo nl2br(htmlspecialchars($formulario['datos_estaticos'])); ?></div>
+                            </div>
+                        <?php endif; ?>
+
                         <hr>
                         <div class="d-flex justify-content-between">
                             <a href="index.php" class="btn btn-secondary">Cancelar</a>
