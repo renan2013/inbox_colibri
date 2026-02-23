@@ -1,3 +1,4 @@
+<?php include 'includes/config.php'; ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,12 +9,14 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f8f9fa;
         }
         .login-container {
+            width: 100%;
             max-width: 400px;
             padding: 2rem;
             border: 1px solid #dee2e6;
@@ -66,7 +69,7 @@
                 <button type="submit" class="btn btn-primary">Login</button>
             </div>
         </form>
-        <?php include 'includes/footer.php'; ?>
     </div>
+    <?php include 'includes/footer.php'; ?>
 </body>
 </html>
