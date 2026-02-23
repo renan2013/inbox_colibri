@@ -20,7 +20,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     exit;
 }
 
-$page_title = 'Gestión de Credenciales';
+$page_title = 'Gestión de Soporte';
 $message = "";
 $message_type = "";
 
@@ -29,7 +29,7 @@ $message_type = "";
 // Capturar mensajes de redirección
 if (isset($_GET['msg'])) {
     if ($_GET['msg'] == 'saved') {
-        $message = "Credencial guardada con éxito.";
+        $message = "Registro guardado con éxito.";
         $message_type = "success";
     } elseif ($_GET['msg'] == 'platform_saved') {
         $message = "Plataforma registrada con éxito.";
@@ -43,23 +43,22 @@ if (isset($_GET['msg'])) {
     }
 }
 
-// 1. Guardar Credencial
+// 1. Guardar Credencial / Soporte
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save') {
-    $usuario = trim($_POST["usuario"]);
-    $clave = trim($_POST["clave"]);
-    $tipo = trim($_POST["tipo"]);
-    $link_acceso = trim($_POST["link_acceso"]);
-    $datos_link = trim($_POST["datos_link"]);
+    $usuario = trim($_POST["usuario"] ?? "");
+    $clave = trim($_POST["clave"] ?? "");
+    $tipo = trim($_POST["tipo"] ?? "Soporte");
+    $link_acceso = trim($_POST["link_acceso"] ?? "");
+    $datos_link = trim($_POST["datos_link"] ?? "");
     $id_formulario = isset($_POST['id_formulario']) && !empty($_POST['id_formulario']) ? $_POST['id_formulario'] : null;
     $static_data = isset($_POST['static_data_hidden']) ? trim($_POST['static_data_hidden']) : "";
     $creado_por = $_SESSION["id"];
 
     // Si es un formulario dinámico, permitimos que usuario y clave estándar sean opcionales en la UI
-    // pero los llenamos con "-" para la DB si vienen vacíos.
-    if (!empty($id_formulario)) {
+    if (!empty($id_formulario) && $id_formulario !== 'estandar') {
         if (empty($usuario)) $usuario = "-";
         if (empty($clave)) $clave = "-";
-        if (empty($tipo)) $tipo = "Personalizado";
+        if (empty($tipo) || $tipo == "") $tipo = "Plantilla";
     }
 
     // Procesar campos dinámicos si existen y concatenarlos a datos_link
@@ -94,31 +93,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         $datos_link .= (!empty($datos_link) ? "\n--- DATOS DEL FORMULARIO ---\n" : "") . $campos_dinamicos_str;
     }
 
-    // Añadir datos estáticos si existen
     if (!empty($static_data)) {
         $datos_link .= "\n\n--- INFORMACIÓN ADICIONAL ---\n" . $static_data;
     }
 
-    // Validar que la conexión exista
     if ($mysqli) {
         $sql = "INSERT INTO credenciales (usuario, clave, tipo, link_acceso, datos_link, creado_por) VALUES (?, ?, ?, ?, ?, ?)";
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("sssssi", $usuario, $clave, $tipo, $link_acceso, $datos_link, $creado_por);
             if ($stmt->execute()) {
                 header("Location: index.php?msg=saved");
-                exit; // Importante detener script aquí
+                exit;
             } else {
                 $message = "Error SQL: " . $stmt->error;
                 $message_type = "danger";
             }
             $stmt->close();
-        } else {
-            $message = "Error Prepare: " . $mysqli->error;
-            $message_type = "danger";
         }
-    } else {
-        $message = "Error de conexión a la base de datos.";
-        $message_type = "danger";
     }
 }
 
@@ -134,9 +125,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
             if ($stmt->execute()) {
                 header("Location: index.php?msg=platform_saved");
                 exit;
-            } else {
-                $message = "Error al guardar plataforma: " . $stmt->error;
-                $message_type = "danger";
             }
             $stmt->close();
         }
@@ -157,19 +145,13 @@ if (isset($_GET['delete']) && ctype_digit($_GET['delete'])) {
     }
 }
 
-// Obtener datos para la vista
-// Usamos una subconsulta para la plataforma y evitar duplicidad por JOIN
+// Listado de datos
 $sql_creds = "SELECT c.*, u.nombre as creador_nombre,
               (SELECT nombre FROM plataformas p WHERE TRIM(LOWER(p.link_acceso)) = TRIM(LOWER(c.link_acceso)) LIMIT 1) as nombre_plataforma 
               FROM credenciales c 
               LEFT JOIN usuarios u ON c.creado_por = u.id 
               ORDER BY c.fecha DESC";
 $result_creds = $mysqli->query($sql_creds);
-
-if (!$result_creds) {
-    $message = "Error en la consulta: " . $mysqli->error;
-    $message_type = "danger";
-}
 
 $sql_platforms = "SELECT * FROM plataformas ORDER BY nombre";
 $result_platforms = $mysqli->query($sql_platforms);
@@ -180,17 +162,16 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
 ?>
 
 <div class="container mt-4">
-    <!-- Migas de Pan -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="<?php echo BASE_URL; ?>dashboard.php">Inicio</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Gestión de Credenciales</li>
+            <li class="breadcrumb-item active">Gestión de Soporte</li>
             <li class="breadcrumb-item"><a href="#" data-bs-toggle="modal" data-bs-target="#modalNuevaPlataforma" class="text-decoration-none"><i class="bi bi-globe"></i> Registrar Plataforma</a></li>
         </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-shield-lock"></i> Gestión de Credenciales</h2>
+        <h2><i class="bi bi-shield-lock"></i> Gestión de Soporte</h2>
         <div>
             <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalNuevaCredencial">
                 <i class="bi bi-headset"></i> Soporte
@@ -199,24 +180,12 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
     </div>
 
     <?php if(!empty($message)): ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
-                Toast.fire({
-                    icon: '<?php echo $message_type; ?>',
-                    title: '<?php echo $message; ?>'
-                });
-            });
-        </script>
+        <div class="alert alert-<?php echo $message_type; ?> alert-dismissible fade show" role="alert">
+            <?php echo $message; ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
     <?php endif; ?>
 
-    <!-- Listado -->
     <div class="row" id="contenedorCredenciales">
         <?php if ($result_creds && $result_creds->num_rows > 0): ?>
             <?php while($row = $result_creds->fetch_assoc()): ?>
@@ -257,14 +226,12 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                             <?php if(!empty($row['link_acceso'])): ?>
                                 <a href="<?php echo htmlspecialchars($row['link_acceso']); ?>" target="_blank" class="btn btn-sm btn-link p-0 mb-2 text-decoration-none"><i class="bi bi-link-45deg"></i> Acceder al sitio</a>
                             <?php endif; ?>
-                            <p class="card-text small text-muted"><?php echo htmlspecialchars($row['datos_link']); ?></p>
+                            <p class="card-text small text-muted" style="white-space: pre-wrap;"><?php echo htmlspecialchars($row['datos_link']); ?></p>
                         </div>
                         <div class="card-footer bg-transparent border-0">
                             <div class="d-grid gap-2 mb-2">
                                 <?php 
-                                // Título: Plataforma o UNELA VIRTUAL por defecto
                                 $titulo_plataforma = !empty($row['nombre_plataforma']) ? $row['nombre_plataforma'] : 'COLIBRÍ VIRTUAL';
-                                // Sanitizar notas para JS (eliminar saltos de línea que rompen el onclick)
                                 $notas_js = str_replace(array("\r", "\n"), " ", $row['datos_link']);
                                 ?>
                                 <button class="btn btn-success btn-sm" onclick="compartirWhatsApp('<?php echo addslashes($titulo_plataforma); ?>', '<?php echo addslashes($row['usuario']); ?>', '<?php echo addslashes($row['clave']); ?>', '<?php echo addslashes($row['link_acceso']); ?>', '<?php echo addslashes($row['tipo']); ?>', '<?php echo addslashes($_SESSION['nombre']); ?>', '<?php echo addslashes($notas_js); ?>')">
@@ -274,8 +241,7 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                             <div class="text-end">
                                 <small class="text-muted fst-italic" style="font-size: 0.75rem;">
                                     <i class="bi bi-person-check"></i> Atendido por: 
-                                    <strong><?php echo htmlspecialchars(!empty($row['creador_nombre']) ? $row['creador_nombre'] : 'Sistema'); ?></strong>
-                                    <br>
+                                    <strong><?php echo htmlspecialchars(!empty($row['creador_nombre']) ? $row['creador_nombre'] : 'Sistema'); ?></strong><br>
                                     <i class="bi bi-clock"></i> <?php echo date("d/m/Y H:i", strtotime($row['fecha'])); ?>
                                 </small>
                             </div>
@@ -286,7 +252,7 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
         <?php else: ?>
             <div class="col-12 text-center py-5">
                 <i class="bi bi-inbox text-muted display-1"></i>
-                <p class="text-muted mt-3">No hay credenciales registradas aún.</p>
+                <p class="text-muted mt-3">No hay registros de soporte aún.</p>
             </div>
         <?php endif; ?>
     </div>
@@ -303,32 +269,25 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    
                     <div class="mb-3">
                         <label class="form-label text-primary fw-bold">Seleccionar Tipo de Soporte / Plantilla</label>
                         <select name="id_formulario" id="selectSubModulo" class="form-select form-select-lg border-primary" onchange="cargarCamposDinamicos()">
                             <option value="">-- Seleccionar --</option>
                             <option value="estandar">Registro Manual (Estándar)</option>
                             <?php 
-                            // Obtener formularios dinámicos
-                            $sql_forms_list = "SELECT id, nombre FROM formularios WHERE activo = 1 ORDER BY nombre";
-                            $result_forms_list = $mysqli->query($sql_forms_list);
-                            if ($result_forms_list && $result_forms_list->num_rows > 0) {
-                                while($f_row = $result_forms_list->fetch_assoc()) {
-                                    echo '<option value="' . $f_row['id'] . '">' . htmlspecialchars($f_row['nombre']) . '</option>';
-                                }
+                            mysqli_data_seek($result_forms_list, 0);
+                            while($f_row = $result_forms_list->fetch_assoc()) {
+                                echo '<option value="' . $f_row['id'] . '">' . htmlspecialchars($f_row['nombre']) . '</option>';
                             }
                             ?>
                         </select>
                     </div>
 
-                    <!-- Contenedor de Campos Dinámicos -->
                     <div id="contenedorCamposDinamicos" class="bg-light p-3 rounded mb-3" style="display:none;">
                         <h6 class="text-muted mb-3 border-bottom pb-2">Campos requeridos:</h6>
                         <div id="dynamicFieldsBody"></div>
                     </div>
 
-                    <!-- Campos Estándar (Ocultos por defecto) -->
                     <div class="campo-estandar" style="display:none;">
                         <div class="mb-3">
                             <label class="form-label text-muted small">Plataforma (Opcional)</label>
@@ -336,7 +295,7 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                                 <option value="">-- Seleccionar --</option>
                                 <?php 
                                 if ($result_platforms && $result_platforms->num_rows > 0) {
-                                    mysqli_data_seek($result_platforms, 0); // Reiniciar puntero
+                                    mysqli_data_seek($result_platforms, 0);
                                     while($plat = $result_platforms->fetch_assoc()) {
                                         echo '<option value="' . htmlspecialchars($plat['link_acceso']) . '">' . htmlspecialchars($plat['nombre']) . '</option>';
                                     }
@@ -344,7 +303,6 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                                 ?>
                             </select>
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Tipo de Acción</label>
                             <select name="tipo" class="form-select">
@@ -373,10 +331,9 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                         </div>
                     </div>
                 </div>
-                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnGuardarCredencial" onclick="this.disabled=true; this.innerHTML='Guardando...'; this.form.submit();">Guardar Credencial</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarCredencial">Guardar Registro</button>
                 </div>
             </form>
         </div>
@@ -394,9 +351,6 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-info py-2">
-                        <small><i class="bi bi-info-circle"></i> Esto añadirá una opción al selector de plataformas.</small>
-                    </div>
                     <div class="mb-3">
                         <label class="form-label">Nombre de la Plataforma</label>
                         <input type="text" name="nombre_plataforma" class="form-control" placeholder="Ej: Zoom Pro, Moodle, cPanel" required>
@@ -416,21 +370,25 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formCred = document.querySelector('#modalNuevaCredencial form');
+    if (formCred) {
+        formCred.addEventListener('submit', function() {
+            const btn = document.getElementById('btnGuardarCredencial');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+            }
+        });
+    }
+});
+
 function copiarTexto(texto) {
     navigator.clipboard.writeText(texto).then(() => {
         const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true
+            toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, timerProgressBar: true
         });
-        Toast.fire({
-            icon: 'success',
-            title: 'Copiado al portapapeles'
-        });
-    }).catch(err => {
-        Swal.fire('Error', 'No se pudo copiar el texto', 'error');
+        Toast.fire({ icon: 'success', title: 'Copiado al portapapeles' });
     });
 }
 
@@ -438,70 +396,39 @@ function togglePassword(id) {
     const input = document.getElementById('pass_' + id);
     const eye = document.getElementById('eye_' + id);
     if (input.type === "password") {
-        input.type = "text";
-        eye.classList.replace('bi-eye', 'bi-eye-slash');
+        input.type = "text"; eye.classList.replace('bi-eye', 'bi-eye-slash');
     } else {
-        input.type = "password";
-        eye.classList.replace('bi-eye-slash', 'bi-eye');
+        input.type = "password"; eye.classList.replace('bi-eye-slash', 'bi-eye');
     }
 }
 
 function compartirWhatsApp(plataforma, usuario, clave, link, tipo_accion, attendee, notas) {
-    // Título en mayúsculas
     let titulo = plataforma.toUpperCase();
-    
-    // Obtener fecha y hora actual para el mensaje
     let ahora = new Date();
     let fechaHora = ahora.toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-    // Mensaje con bloque destacado para credenciales
-    let mensaje = `🏛️ *${titulo}*\n\nHola! Aquí están tus datos de acceso para *${tipo_accion}*:\n\n` +
+    let mensaje = `🏛️ *${titulo}*\n\nHola! Aquí están tus datos para *${tipo_accion}*:\n\n` +
                   `────────────────\n` +
                   `👤 USUARIO: *${usuario}*\n` +
                   `🔑 CLAVE: *${clave}*\n` +
                   `────────────────`;
-    
-    if (link) {
-        mensaje += `\n\n🔗 *Link de acceso:* ${link}`;
-    } else {
-        mensaje += `\n\n🔗 *Link de acceso:* https://renangalvan.net/inbox_colibri/`;
-    }
-
-    // Agregar notas si existen
-    if (notas && notas.trim() !== '') {
-        mensaje += `\n\n📝 *Notas:* ${notas}`;
-    }
-    
+    if (link) mensaje += `\n\n🔗 *Link:* ${link}`;
+    else mensaje += `\n\n🔗 *Link:* https://renangalvan.net/inbox_colibri/`;
+    if (notas && notas.trim() !== '') mensaje += `\n\n📝 *Notas:* ${notas}`;
     mensaje += `\n\n_Atendido por: ${attendee} el ${fechaHora}_`;
-    
     navigator.clipboard.writeText(mensaje).then(() => {
         Swal.fire({
-            title: '¡Mensaje Copiado!',
-            html: 'El mensaje ya está en tu portapapeles.<br>Ve a <b>WhatsApp</b> y pégalo (Ctrl+V).',
-            icon: 'success',
-            confirmButtonText: 'Entendido',
-            confirmButtonColor: '#25D366' // Color WhatsApp
+            title: '¡Mensaje Copiado!', html: 'El mensaje ya está en tu portapapeles.<br>Pégalo en WhatsApp (Ctrl+V).',
+            icon: 'success', confirmButtonText: 'Entendido', confirmButtonColor: '#25D366'
         });
-    }).catch(err => {
-        Swal.fire('Error', 'No se pudo copiar automáticamente. Por favor copia los datos manualmente.', 'error');
     });
 }
 
 function confirmarEliminacion(id) {
     Swal.fire({
-        title: '¿Estás seguro?',
-        text: "¡No podrás revertir esto!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = '?delete=' + id;
-        }
-    });
+        title: '¿Estás seguro?', text: "¡No podrás revertir esto!", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+    }).then((result) => { if (result.isConfirmed) window.location.href = '?delete=' + id; });
 }
 
 function cargarCamposDinamicos() {
@@ -511,30 +438,17 @@ function cargarCamposDinamicos() {
     const camposEstandar = document.querySelectorAll('.campo-estandar');
 
     if (idForm === 'estandar') {
-        // Caso: Registro Manual
-        contenedor.style.display = 'none';
-        dynamicBody.innerHTML = '';
+        contenedor.style.display = 'none'; dynamicBody.innerHTML = '';
         camposEstandar.forEach(div => div.style.display = 'block');
     } else if (idForm !== '') {
-        // Caso: Plantilla Dinámica
-        contenedor.style.display = 'block';
-        camposEstandar.forEach(div => div.style.display = 'none');
-        
-        dynamicBody.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
-        
+        contenedor.style.display = 'block'; camposEstandar.forEach(div => div.style.display = 'none');
+        dynamicBody.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
         fetch('get_dynamic_fields.php?id_form=' + idForm)
             .then(response => response.text())
-            .then(html => {
-                dynamicBody.innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                dynamicBody.innerHTML = '<p class="text-danger small">Error al cargar campos.</p>';
-            });
+            .then(html => { dynamicBody.innerHTML = html; })
+            .catch(() => { dynamicBody.innerHTML = '<p class="text-danger small">Error al cargar campos.</p>'; });
     } else {
-        // Caso: Ninguno seleccionado (Estado inicial)
-        contenedor.style.display = 'none';
-        dynamicBody.innerHTML = '';
+        contenedor.style.display = 'none'; dynamicBody.innerHTML = '';
         camposEstandar.forEach(div => div.style.display = 'none');
     }
 }
@@ -542,36 +456,11 @@ function cargarCamposDinamicos() {
 function actualizarLink() {
     const selector = document.getElementById('selectPlataforma');
     const inputLink = document.getElementById('inputLinkAcceso');
-    const selectedOption = selector.options[selector.selectedIndex];
-    
-    // Si hay un valor seleccionado (el link), lo pone en el input
-    if (selectedOption.value) {
-        inputLink.value = selectedOption.value;
-        // Guardar selección para el futuro
-        localStorage.setItem('last_platform', selectedOption.value);
-    } else {
-        // Si el usuario selecciona "-- Seleccionar --", borramos la memoria
-        localStorage.removeItem('last_platform');
-    }
+    if (selector.value) inputLink.value = selector.value;
 }
-
-// Recuperar la última plataforma seleccionada al cargar la página
-document.addEventListener('DOMContentLoaded', function() {
-    const lastPlatform = localStorage.getItem('last_platform');
-    const selector = document.getElementById('selectPlataforma');
-    const inputLink = document.getElementById('inputLinkAcceso');
-
-    if (lastPlatform && selector) {
-        selector.value = lastPlatform;
-        // Si el valor existe en el select, actualizamos también el input visualmente
-        if (selector.value === lastPlatform) {
-            inputLink.value = lastPlatform;
-        }
-    }
-});
 </script>
 
 <?php 
 require_once PROJECT_ROOT . '/includes/footer.php'; 
-ob_end_flush(); // Enviar buffer de salida
+ob_end_flush();
 ?>
