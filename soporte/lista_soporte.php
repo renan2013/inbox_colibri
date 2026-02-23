@@ -59,9 +59,9 @@ $result_categorias = $mysqli->query($sql_categorias);
                                             <td><?php echo htmlspecialchars($soporte['titulo']); ?></td>
                                             <td><?php echo htmlspecialchars($soporte['categoria']); ?></td>
                                             <td>
-                                                <a href="https://unela.org/bpm_unela/soporte/ver_soporte.php?id=<?php echo $soporte['id']; ?>" class="btn btn-sm btn-secondary" title="Ver"><i class="bi bi-eye"></i></a>
-                                                <a href="https://unela.org/bpm_unela/soporte/editar_soporte.php?id=<?php echo $soporte['id']; ?>" class="btn btn-sm btn-secondary" title="Editar"><i class="bi bi-pencil"></i></a>
-                                                <a href="https://unela.org/bpm_unela/soporte/eliminar_soporte.php?id=<?php echo $soporte['id']; ?>" class="btn btn-sm btn-secondary" title="Eliminar"><i class="bi bi-trash"></i></a>
+                                                <a href="https://renangalvan.net/inbox_colibri/soporte/ver_soporte.php?id=<?php echo $soporte['id']; ?>" class="btn btn-sm btn-secondary" title="Ver"><i class="bi bi-eye"></i></a>
+                                                <a href="https://renangalvan.net/inbox_colibri/soporte/editar_soporte.php?id=<?php echo $soporte['id']; ?>" class="btn btn-sm btn-secondary" title="Editar"><i class="bi bi-pencil"></i></a>
+                                                <a href="https://renangalvan.net/inbox_colibri/soporte/eliminar_soporte.php?id=<?php echo $soporte['id']; ?>" class="btn btn-sm btn-secondary" title="Eliminar"><i class="bi bi-trash"></i></a>
                                             </td>
                                         </tr>
                                     <?php endwhile; ?>

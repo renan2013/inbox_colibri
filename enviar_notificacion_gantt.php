@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $body .= "<strong>Mensaje:</strong><br>";
                 $body .= nl2br(htmlspecialchars($message));
                 $body .= "<br><br>Puedes ver la tarea haciendo clic en el siguiente enlace:<br>";
-                $body .= "<a href='https://unela.org/bpm_unela/ver_tarea.php?id=" . $taskId . "'>Ver Tarea</a>"; // Assuming this is the domain
+                $body .= "<a href='https://renangalvan.net/inbox_colibri/ver_tarea.php?id=" . $taskId . "'>Ver Tarea</a>"; // Assuming this is the domain
                 
                 $body .= "<br><br>Saludos,<br>El equipo de DTI Unela";
 

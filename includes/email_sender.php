@@ -75,7 +75,7 @@ function sendTaskAssignmentEmail($toEmail, $toName, $taskTitle, $taskDescription
                         <h3>' . htmlspecialchars($taskTitle) . '</h3>
                         <p><strong>Descripción:</strong> ' . $taskDescription . '</p>
                         ' . $dueDateMessage . '
-                        <p>Puedes ver los detalles completos de la tarea en Inbox haciendo clic aquí: <a href="https://unela.org/bpm_unela/ver_tarea.php?id=' . $taskId . '">Ver Tarea</a></p>
+                        <p>Puedes ver los detalles completos de la tarea en Inbox haciendo clic aquí: <a href="https://renangalvan.net/inbox_colibri/ver_tarea.php?id=' . $taskId . '">Ver Tarea</a></p>
                     </div>
                     <p class="footer">Este es un mensaje automático, por favor no respondas a este correo. Design an developed by renangalvan.net</p>
                 </div>
