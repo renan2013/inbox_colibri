@@ -1,0 +1,13 @@
+body {
+    background-color: white; /* Blanco según la solicitud del usuario */
+}
+
+/* Estilo para los enlaces de navegación activos */
+.navbar-nav .nav-item .nav-link.active {
+    color: #5fb230 !important; /* El color del texto será verde */
+}
+
+/* Para los dropdowns, también asegurar que el texto del enlace padre activo sea verde */
+.navbar-nav .nav-item.dropdown .nav-link.active {
+    color: #5fb230 !important;
+}

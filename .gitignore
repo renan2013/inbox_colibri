@@ -1,0 +1,19 @@
+# Archivos temporales de PHP y logs
+log_notas.txt
+debug_guardar_boleta.log
+*.log
+
+# Carpetas de subidas y temporales
+uploads/temp/
+uploads/boletas_generadas/
+uploads/silabos/
+uploads/actas/
+boleta/boleta.pdf
+design_example.pdf
+
+# Archivos de entorno y configuración sensible
+includes/config.php
+
+# Git y otros
+.DS_Store
+Thumbs.db

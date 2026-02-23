@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Despliegue Automático con Git en Hostinger</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+        h3 {
+            margin-top: 25px;
+        }
+        code {
+            background-color: #e9e9e9;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        pre {
+            background-color: #e9e9e9;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        ul, ol {
+            margin-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        strong {
+            color: #d35400;
+        }
+        .warning {
+            color: #c0392b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guía Completa para Configurar el Despliegue Automático con Git en Hostinger</h1>
+
+        <p>Aquí tienes el orden de los pasos y las consideraciones clave para configurar el despliegue automático de tu proyecto en Hostinger, evitando los errores que encontramos:</p>
+
+        <h2>Paso 1: Preparación del Proyecto Local</h2>
+        <ol>
+            <li>
+                <h3>Inicializa tu repositorio Git localmente y conecta con GitHub.</h3>
+                <ul>
+                    <li>Asegúrate de que tu repositorio de GitHub sea <strong>privado</strong> (si es el caso) y que la rama principal se llame <code>main</code>.</li>
+                </ul>
+                <pre><code>git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/tu_usuario/tu_repositorio.git # O la URL SSH si ya la tienes
+git push -u origin main</code></pre>
+            </li>
+        </ol>
+
+        <h2>Paso 2: Configuración en Hostinger (hPanel)</h2>
+        <ol>
+            <li>
+                <h3>Accede a tu hPanel y ve a la sección <strong>Git</strong>.</h3>
+            </li>
+            <li>
+                <h3>Genera la Clave SSH (CRÍTICO para repositorios privados):</h3>
+                <ul>
+                    <li>Haz clic en <strong>"Generar clave SSH"</strong>.</li>
+                    <li>Copia la <strong>clave pública</strong> que te proporciona Hostinger.</li>
+                </ul>
+            </li>
+            <li>
+                <h3>Vacía el Directorio de Despliegue:</h3>
+                <ul>
+                    <li><strong><span class="warning">¡MUY IMPORTANTE!</span></strong> La carpeta en tu servidor donde se desplegará el código (ej. <code>/home/u419870110/domains/unela.org/public_html/bpm_unela</code>) debe estar <strong>COMPLETAMENTE VACÍA</strong> antes de crear el repositorio en Hostinger. Si contiene archivos, Hostinger no te permitirá crearlo.</li>
+                    <li>Puedes vaciarla usando FileZilla o SSH (con mucho cuidado con <code>rm -rf *</code> si usas SSH).</li>
+                </ul>
+            </li>
+            <li>
+                <h3>Crea el Repositorio en Hostinger:</h3>
+                <ul>
+                    <li>Haz clic en <strong>"Añadir repositorio"</strong> o similar.</li>
+                    <li><strong>URL del Repositorio:</strong> Aquí es CRÍTICO.
+                        <ul>
+                            <li><strong>Para repositorios privados:</strong> Usa la <strong>URL SSH</strong> de tu repositorio de GitHub. Ejemplo: <code>git@github.com:tu_usuario/tu_repositorio.git</code></li>
+                            <li><strong>Para repositorios públicos:</strong> Puedes usar la URL HTTPS: <code>https://github.com/tu_usuario/tu_repositorio.git</code></li>
+                        </ul>
+                    </li>
+                    <li><strong>Rama (Branch):</strong> <code>main</code> (o la rama que uses para despliegue).</li>
+                    <li><strong>Directorio de Despliegue:</strong> La ruta completa en tu servidor (ej. <code>/home/u419870110/domains/unela.org/public_html/bpm_unela</code>).</li>
+                    <li>Una vez creado, el repositorio debería aparecer en la lista.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h2>Paso 3: Configuración en GitHub</h2>
+        <ol>
+            <li>
+                <h3>Añade la Clave Pública SSH a GitHub (CRÍTICO para repositorios privados):</h3>
+                <ul>
+                    <li>Ve a tu repositorio en GitHub -> <strong>Settings</strong> -> <strong>Deploy keys</strong>.</li>
+                    <li>Haz clic en <strong>Add deploy key</strong>.</li>
+                    <li>Pega la <strong>clave pública</strong> que copiaste de Hostinger.</li>
+                    <li><strong><span class="warning">¡MUY IMPORTANTE!</span></strong> Marca la casilla <strong>'Allow write access'</strong>.</li>
+                    <li>Haz clic en <strong>Add key</strong>.</li>
+                </ul>
+            </li>
+            <li>
+                <h3>Configura el Webhook de Hostinger en GitHub:</h3>
+                <ul>
+                    <li>Vuelve a la sección <strong>Git</strong> en Hostinger.</li>
+                    <li>Busca la opción de <strong>"Implementación automática"</strong> (o "Auto Deployment") y actívala.</li>
+                    <li>Hostinger te proporcionará una <strong>URL de Webhook</strong> (ej: <code>https://webhooks.hostinger.com/deploy/TU_ID_UNICO</code>). Cópiala.</li>
+                    <li>Ve a tu repositorio en GitHub -> <strong>Settings</strong> -> <strong>Webhooks</strong>.</li>
+                    <li>Haz clic en <strong>Add webhook</strong>.</li>
+                    <li><strong>Payload URL:</strong> Pega la URL del webhook que te dio Hostinger.</li>
+                    <li><strong>Content type:</strong> <code>application/x-www-form-urlencoded</code>.</li>
+                    <li><strong>Secret:</strong> Déjalo <strong>vacío</strong> (el webhook de Hostinger no lo requiere aquí).</li>
+                    <li><strong>Events:</strong> Selecciona <strong>Just the <code>push</code> event</strong>.</li>
+                    <li>Asegúrate de que <strong>Active</strong> esté marcado.</li>
+                    <li>Haz clic en <strong>Add webhook</strong>.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h2>Paso 4: Despliegue Inicial y Prueba</h2>
+        <ol>
+            <li>
+                <h3>Despliegue Manual Inicial desde Hostinger:</h3>
+                <ul>
+                    <li>Vuelve a la sección <strong>Git</strong> en tu hPanel.</li>
+                    <li>Selecciona tu repositorio.</li>
+                    <li>Haz clic en el botón <strong>"Implementar"</strong> (Deploy). Esto hará el primer <code>git pull</code> y descargará tu código al servidor.</li>
+                    <li>Verifica la "última salida de compilación" para asegurarte de que fue exitoso.</li>
+                </ul>
+            </li>
+            <li>
+                <h3>Prueba del Despliegue Automático:</h3>
+                <ul>
+                    <li>Haz un cambio pequeño y visible en tu proyecto local.</li>
+                    <li>Guarda, haz <code>git add .</code>, <code>git commit -m "Probando despliegue automatico"</code> y <code>git push</code>.</li>
+                    <li>Espera uno o dos minutos y recarga tu página web. El cambio debería aparecer automáticamente.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h2>Consideraciones Adicionales:</h2>
+        <ul>
+            <li><strong>Permisos de Usuario en Hostinger:</strong> Si eres colaborador y no el dueño de la cuenta, verifica que tu rol tenga permisos para usar la herramienta Git.</li>
+            <li><strong>Limpieza:</strong> Una vez que todo funcione, borra los archivos <code>deploy.php</code> y <code>test_exec.php</code> de tu servidor, ya no son necesarios.</li>
+            <li><strong>Depuración:</strong> Si el despliegue automático falla, revisa el historial de despliegues en Hostinger y el log del webhook en GitHub para ver los mensajes de error.</li>
+        </ul>
+
+        <p>Espero que esta guía te sea de gran utilidad para futuros proyectos. ¡Excelente trabajo al depurar todo esto!</p>
+    </div>
+</body>
+</html>
