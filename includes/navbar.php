@@ -50,6 +50,7 @@ $uris_registro = [
                     </li>
                     <?php endif; ?>
 
+                    <!--
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo is_active($uris_gestion_curso, $current_uri); ?>" href="#" id="navbarGestionarCursoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Gestionar Curso
@@ -59,6 +60,7 @@ $uris_registro = [
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>recursos_profesor.php"><i class="bi bi-collection"></i> Recursos</a></li>
                         </ul>
                     </li>
+                    -->
 
                     <?php if(has_permission($mysqli, 'gestionar_usuarios')): // Asumiendo que soporte es admin ?>
                     <li class="nav-item dropdown">
@@ -79,7 +81,7 @@ $uris_registro = [
                     </li>
                     <?php endif; ?>
 
-                    <?php if(has_permission($mysqli, 'ver_menu_registro')): ?>
+                    <?php /* if(has_permission($mysqli, 'ver_menu_registro')): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo is_active($uris_registro, $current_uri); ?>" href="#" id="navbarRegistroDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Registro
@@ -121,7 +123,7 @@ $uris_registro = [
                             <?php endif; ?>
                         </ul>
                     </li>
-                    <?php endif; ?>
+                    <?php endif; */ ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Hola, <?php echo htmlspecialchars($_SESSION["nombre"]); ?>
