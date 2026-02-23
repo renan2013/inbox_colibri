@@ -20,11 +20,12 @@ $message_type = "";
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save_form') {
     $nombre = trim($_POST["nombre"]);
     $descripcion = trim($_POST["descripcion"]);
+    $datos_estaticos = trim($_POST["datos_estaticos"]);
     
     if ($mysqli) {
-        $sql = "INSERT INTO formularios (nombre, descripcion) VALUES (?, ?)";
+        $sql = "INSERT INTO formularios (nombre, descripcion, datos_estaticos) VALUES (?, ?, ?)";
         if ($stmt = $mysqli->prepare($sql)) {
-            $stmt->bind_param("ss", $nombre, $descripcion);
+            $stmt->bind_param("sss", $nombre, $descripcion, $datos_estaticos);
             if ($stmt->execute()) {
                 header("Location: index.php?msg=saved");
                 exit;
@@ -169,6 +170,11 @@ require_once '../includes/navbar.php';
                     <div class="mb-3">
                         <label class="form-label">Descripción o Propósito</label>
                         <textarea name="descripcion" class="form-control" rows="3" placeholder="Explique para qué servirá este módulo..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-success">Datos Estáticos para el Cliente</label>
+                        <textarea name="datos_estaticos" class="form-control" rows="4" placeholder="Información fija que siempre se enviará por WhatsApp (ej: Pasos a seguir, horario, link general...)"></textarea>
+                        <div class="form-text text-muted">Estos datos aparecerán automáticamente al compartir por WhatsApp.</div>
                     </div>
                 </div>
                 <div class="modal-footer">

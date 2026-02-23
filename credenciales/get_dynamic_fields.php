@@ -9,6 +9,23 @@ if (!isset($_GET['id_form']) || !ctype_digit($_GET['id_form'])) {
 
 $id_form = $_GET['id_form'];
 
+// Obtener datos estáticos del formulario
+$sql_f = "SELECT datos_estaticos FROM formularios WHERE id = ?";
+$stmt_f = $mysqli->prepare($sql_f);
+$stmt_f->bind_param("i", $id_form);
+$stmt_f->execute();
+$res_f = $stmt_f->get_result();
+$f_data = $res_f->fetch_assoc();
+$stmt_f->close();
+
+if (!empty($f_data['datos_estaticos'])) {
+    echo '<div class="alert alert-info border-0 shadow-sm mb-4">';
+    echo '<h6 class="alert-heading fw-bold small"><i class="bi bi-info-circle-fill"></i> Datos Estáticos para el Cliente:</h6>';
+    echo '<p class="mb-0 small">' . nl2br(htmlspecialchars($f_data['datos_estaticos'])) . '</p>';
+    echo '<input type="hidden" name="static_data_hidden" value="'.htmlspecialchars($f_data['datos_estaticos']).'">';
+    echo '</div>';
+}
+
 $sql = "SELECT * FROM formularios_campos WHERE id_formulario = ? ORDER BY orden, id";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $id_form);

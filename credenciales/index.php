@@ -51,7 +51,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $link_acceso = trim($_POST["link_acceso"]);
     $datos_link = trim($_POST["datos_link"]);
     $id_formulario = isset($_POST['id_formulario']) && !empty($_POST['id_formulario']) ? $_POST['id_formulario'] : null;
+    $static_data = isset($_POST['static_data_hidden']) ? trim($_POST['static_data_hidden']) : "";
     $creado_por = $_SESSION["id"];
+
+    // Si es un formulario dinámico, permitimos que usuario y clave estándar sean opcionales en la UI
+    // pero los llenamos con "-" para la DB si vienen vacíos.
+    if (!empty($id_formulario)) {
+        if (empty($usuario)) $usuario = "-";
+        if (empty($clave)) $clave = "-";
+        if (empty($tipo)) $tipo = "Personalizado";
+    }
 
     // Procesar campos dinámicos si existen y concatenarlos a datos_link
     $campos_dinamicos_str = "";
@@ -73,7 +82,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 
     if (!empty($campos_dinamicos_str)) {
-        $datos_link .= (!empty($datos_link) ? "\n--- DATOS ADICIONALES ---" : "DATOS DE LA PLANTILLA:") . $campos_dinamicos_str;
+        $datos_link .= (!empty($datos_link) ? "\n--- DATOS DEL FORMULARIO ---\n" : "") . $campos_dinamicos_str;
+    }
+
+    // Añadir datos estáticos si existen
+    if (!empty($static_data)) {
+        $datos_link .= "\n\n--- INFORMACIÓN ADICIONAL ---\n" . $static_data;
     }
 
     // Validar que la conexión exista
@@ -314,9 +328,9 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                         </select>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3 campo-estandar">
                         <label class="form-label">Tipo de Acción</label>
-                        <select name="tipo" class="form-select" required>
+                        <select name="tipo" class="form-select">
                             <option value="Cuenta Nueva">Cuenta Nueva</option>
                             <option value="Cambio de contraseña">Cambio de contraseña</option>
                             <option value="Actualización de datos">Actualización de datos</option>
@@ -324,20 +338,20 @@ require_once PROJECT_ROOT . '/includes/navbar.php';
                             <option value="Otro">Otro</option>
                         </select>
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 campo-estandar">
                         <label class="form-label">Usuario</label>
-                        <input type="text" name="usuario" class="form-control" placeholder="Ej: juan.perez" required>
+                        <input type="text" name="usuario" class="form-control" placeholder="Ej: juan.perez">
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 campo-estandar">
                         <label class="form-label">Contraseña</label>
-                        <input type="text" name="clave" class="form-control" placeholder="Ej: Clave123" required>
+                        <input type="text" name="clave" class="form-control" placeholder="Ej: Clave123">
                     </div>
                     <!-- Campo LINK: Se rellena vía JS pero también se puede editar -->
-                    <div class="mb-3">
+                    <div class="mb-3 campo-estandar">
                         <label class="form-label">Link de Acceso</label>
                         <input type="url" name="link_acceso" id="inputLinkAcceso" class="form-control" placeholder="https://...">
                     </div>
-                    <div class="mb-3">
+                    <div class="mb-3 campo-estandar">
                         <label class="form-label">Notas Adicionales</label>
                         <textarea name="datos_link" class="form-control" rows="2"></textarea>
                     </div>
@@ -476,9 +490,15 @@ function cargarCamposDinamicos() {
     const idForm = document.getElementById('selectSubModulo').value;
     const contenedor = document.getElementById('contenedorCamposDinamicos');
     const dynamicBody = document.getElementById('dynamicFieldsBody');
+    
+    // Lista de contenedores de campos estándar para ocultar
+    const camposEstándar = document.querySelectorAll('.campo-estandar');
 
     if (idForm) {
         contenedor.style.display = 'block';
+        // Ocultar campos estándar
+        camposEstándar.forEach(div => div.style.display = 'none');
+        
         dynamicBody.innerHTML = '<div class="text-center py-2"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
         
         fetch('get_dynamic_fields.php?id_form=' + idForm)
@@ -493,6 +513,8 @@ function cargarCamposDinamicos() {
     } else {
         contenedor.style.display = 'none';
         dynamicBody.innerHTML = '';
+        // Volver a mostrar campos estándar
+        camposEstándar.forEach(div => div.style.display = 'block');
     }
 }
 
