@@ -81,7 +81,7 @@ $uris_registro = [
                     </li>
                     <?php endif; ?>
 
-                    <?php /* if(has_permission($mysqli, 'ver_menu_registro')): ?>
+                    <?php if(has_permission($mysqli, 'ver_menu_registro')): ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo is_active($uris_registro, $current_uri); ?>" href="#" id="navbarRegistroDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Registro
@@ -123,7 +123,7 @@ $uris_registro = [
                             <?php endif; ?>
                         </ul>
                     </li>
-                    <?php endif; */ ?>
+                    <?php endif; ?>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Hola, <?php echo htmlspecialchars($_SESSION["nombre"]); ?>
