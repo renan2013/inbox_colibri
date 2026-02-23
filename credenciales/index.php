@@ -158,14 +158,18 @@ if (isset($_GET['delete']) && ctype_digit($_GET['delete'])) {
 }
 
 // Obtener datos para la vista
-// Añadimos GROUP BY para evitar duplicidad si hay múltiples plataformas con el mismo link
-$sql_creds = "SELECT c.*, u.nombre as creador_nombre, p.nombre as nombre_plataforma 
+// Usamos una subconsulta para la plataforma y evitar duplicidad por JOIN
+$sql_creds = "SELECT c.*, u.nombre as creador_nombre,
+              (SELECT nombre FROM plataformas p WHERE TRIM(LOWER(p.link_acceso)) = TRIM(LOWER(c.link_acceso)) LIMIT 1) as nombre_plataforma 
               FROM credenciales c 
               LEFT JOIN usuarios u ON c.creado_por = u.id 
-              LEFT JOIN plataformas p ON TRIM(LOWER(c.link_acceso)) = TRIM(LOWER(p.link_acceso))
-              GROUP BY c.id_credencial
               ORDER BY c.fecha DESC";
 $result_creds = $mysqli->query($sql_creds);
+
+if (!$result_creds) {
+    $message = "Error en la consulta: " . $mysqli->error;
+    $message_type = "danger";
+}
 
 $sql_platforms = "SELECT * FROM plataformas ORDER BY nombre";
 $result_platforms = $mysqli->query($sql_platforms);
