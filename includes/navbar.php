@@ -87,27 +87,36 @@ $uris_registro = [
                             Registro
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="navbarRegistroDropdown">
+                            <!-- Seccion 1
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>boleta/generar_boleta.php"><i class="bi bi-receipt"></i> Generar Boleta de Pago</a></li>
                             <li><hr class="dropdown-divider"></li>
+                            -->
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>registrar_usuario.php">Registrar Usuario</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_usuarios.php">Lista de Usuarios</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/crear_expediente_digital.php">Crear Expediente Digital</a></li>
+                            
+                            <!-- Seccion 3
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/registrar_programa.php">Registrar Programa</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/anadir_plan_estudios.php">Registrar Curso</a></li>                        
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_grupos.php">Gestionar Grupos</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>precios_conesup/index.php">Precios de Cursos</a></li>
+                            -->
 
+                            <!-- Seccion 4
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/lista_programas.php">Lista de Programas</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/lista_cursos.php">Lista de Cursos</a></li>
                             <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>matricula/generar_programa_completo.php">Ver Programas Completos</a></li>
+                            -->
 
                             <?php if(has_permission($mysqli, 'gestionar_plantillas') || has_permission($mysqli, 'gestionar_saludos')): ?>
+                                <!-- Seccion 5
                                 <li><hr class="dropdown-divider"></li>
                                 <?php if(has_permission($mysqli, 'gestionar_etiquetas')): ?>
                                     <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_etiquetas.php">Etiquetas de Tareas</a></li>
                                 <?php endif; ?>
+                                -->
                                 
                                 <?php if(has_permission($mysqli, 'gestionar_saludos')): ?>
                                     <li><hr class="dropdown-divider"></li>
