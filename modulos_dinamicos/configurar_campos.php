@@ -27,11 +27,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $tipo_campo = trim($_POST["tipo_campo"]);
     $opciones = trim($_POST["opciones"]);
     $requerido = isset($_POST["requerido"]) ? 1 : 0;
+    $mapeo = $_POST["mapeo"];
     
     if ($mysqli) {
-        $sql = "INSERT INTO formularios_campos (id_formulario, nombre_campo, tipo_campo, opciones, requerido) VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO formularios_campos (id_formulario, nombre_campo, tipo_campo, opciones, requerido, mapeo) VALUES (?, ?, ?, ?, ?, ?)";
         if ($stmt = $mysqli->prepare($sql)) {
-            $stmt->bind_param("isssi", $id_form, $nombre_campo, $tipo_campo, $opciones, $requerido);
+            $stmt->bind_param("isssis", $id_form, $nombre_campo, $tipo_campo, $opciones, $requerido, $mapeo);
             if ($stmt->execute()) {
                 header("Location: configurar_campos.php?id=$id_form&msg=field_saved");
                 exit;
@@ -206,6 +207,15 @@ require_once '../includes/navbar.php';
                             <option value="email">Email</option>
                             <option value="url">URL (Link)</option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-primary">Asignar a Campo Principal (Mapeo)</label>
+                        <select name="mapeo" class="form-select border-primary">
+                            <option value="ninguno">Ninguno (Solo guardar en notas)</option>
+                            <option value="usuario">Usar como Usuario Principal</option>
+                            <option value="clave">Usar como Contraseña Principal</option>
+                        </select>
+                        <div class="form-text">Si seleccionas uno, este dato aparecerá en los inputs finales de la tarjeta de credencial.</div>
                     </div>
                     <div class="mb-3" id="campoOpciones" style="display:none;">
                         <label class="form-label">Opciones del Selector (Separadas por coma)</label>

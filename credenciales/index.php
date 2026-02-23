@@ -67,14 +67,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     foreach ($_POST as $key => $value) {
         if (strpos($key, 'dyn_field_') === 0) {
             $id_campo = str_replace('dyn_field_', '', $key);
-            // Obtener nombre del campo para que el texto sea legible
-            $sql_c = "SELECT nombre_campo FROM formularios_campos WHERE id = ?";
+            
+            // Obtener configuración del campo (nombre y mapeo)
+            $sql_c = "SELECT nombre_campo, mapeo FROM formularios_campos WHERE id = ?";
             if ($stmt_c = $mysqli->prepare($sql_c)) {
                 $stmt_c->bind_param("i", $id_campo);
                 $stmt_c->execute();
                 $res_c = $stmt_c->get_result();
                 if ($row_c = $res_c->fetch_assoc()) {
-                    $campos_dinamicos_str .= "\n" . $row_c['nombre_campo'] . ": " . trim($value);
+                    $val_trim = trim($value);
+                    $campos_dinamicos_str .= "\n" . $row_c['nombre_campo'] . ": " . $val_trim;
+                    
+                    // APLICAR MAPEO A LOS INPUTS FINALES
+                    if ($row_c['mapeo'] == 'usuario' && !empty($val_trim)) {
+                        $usuario = $val_trim;
+                    } elseif ($row_c['mapeo'] == 'clave' && !empty($val_trim)) {
+                        $clave = $val_trim;
+                    }
                 }
                 $stmt_c->close();
             }
@@ -149,11 +158,12 @@ if (isset($_GET['delete']) && ctype_digit($_GET['delete'])) {
 }
 
 // Obtener datos para la vista
-// Usamos TRIM y LOWER para que la coincidencia de links sea más robusta
+// Añadimos GROUP BY para evitar duplicidad si hay múltiples plataformas con el mismo link
 $sql_creds = "SELECT c.*, u.nombre as creador_nombre, p.nombre as nombre_plataforma 
               FROM credenciales c 
               LEFT JOIN usuarios u ON c.creado_por = u.id 
               LEFT JOIN plataformas p ON TRIM(LOWER(c.link_acceso)) = TRIM(LOWER(p.link_acceso))
+              GROUP BY c.id_credencial
               ORDER BY c.fecha DESC";
 $result_creds = $mysqli->query($sql_creds);
 
