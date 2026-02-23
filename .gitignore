@@ -11,9 +11,6 @@ uploads/actas/
 boleta/boleta.pdf
 design_example.pdf
 
-# Archivos de entorno y configuración sensible
-includes/config.php
-
 # Git y otros
 .DS_Store
 Thumbs.db
