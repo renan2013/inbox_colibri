@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - BPM Unela</title>
+    <title>Login - Colibrí</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -26,7 +26,7 @@
 <body>
     <div class="login-container">
         <div class="text-center mb-4">
-            <img src="imgs/SVG/logo_color.svg" alt="BPM Unela Logo" style="max-width: 250px; margin-bottom: 1rem;">
+            <img src="imgs/SVG/logo_color.svg" alt="Colibrí Logo" style="max-width: 250px; margin-bottom: 1rem;">
             <h2 class="h4 text-muted">Gestor de Proyectos</h2>
         </div>
         <p class="text-center text-muted">Ingrese sus credenciales para iniciar sesión.</p>

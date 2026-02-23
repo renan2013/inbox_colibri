@@ -27,7 +27,7 @@ $uris_registro = [
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="<?php echo BASE_URL; ?>dashboard.php">
-            <img src="<?php echo BASE_URL; ?>imgs/SVG/logo_blanco.svg" alt="BPM Unela Logo" style="max-height: 40px; margin-right: 10px;"><span style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px; vertical-align: middle;"></span> <span class="fs-6">Gestor de Proyectos</span>
+            <img src="<?php echo BASE_URL; ?>imgs/SVG/logo_blanco.svg" alt="Colibrí Logo" style="max-height: 40px; margin-right: 10px;"><span style="border-left: 1px solid #ccc; height: 30px; margin: 0 10px; vertical-align: middle;"></span> <span class="fs-6">Gestor de Proyectos</span>
         </a>
         
         <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">

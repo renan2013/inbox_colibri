@@ -1,4 +1,4 @@
-# Proyecto: BPM UNELA
+# Proyecto: Colibrí
 
 Sistema de Gestión de Procesos de Negocio (BPM) para la UNELA. Este proyecto maneja tareas, plantillas, usuarios, y módulos específicos como matrícula y soporte.
 

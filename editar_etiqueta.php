@@ -41,7 +41,7 @@ if($stmt_etiqueta_existente = $mysqli->prepare($sql_etiqueta_existente)){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Etiqueta - BPM Unela</title>
+    <title>Editar Etiqueta - Colibrí</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
