@@ -113,12 +113,10 @@ $uris_registro = [
                             -->
 
                             <?php if(has_permission($mysqli, 'gestionar_plantillas') || has_permission($mysqli, 'gestionar_saludos')): ?>
-                                <!-- Seccion 5
                                 <li><hr class="dropdown-divider"></li>
                                 <?php if(has_permission($mysqli, 'gestionar_etiquetas')): ?>
                                     <li><a class="dropdown-item" href="<?php echo BASE_URL; ?>gestionar_etiquetas.php">Etiquetas de Tareas</a></li>
                                 <?php endif; ?>
-                                -->
                                 
                                 <?php if(has_permission($mysqli, 'gestionar_saludos')): ?>
                                     <li><hr class="dropdown-divider"></li>
