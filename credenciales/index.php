@@ -22,14 +22,8 @@ $page_title = 'Gestión de Soporte';
 $message = "";
 $message_type = "";
 
-// LOG DE DEPURACIÓN (Se creará un archivo debug_soporte.log en esta carpeta)
-function debug_log($text) {
-    file_put_contents('debug_soporte.log', date('[Y-m-d H:i:s] ') . $text . PHP_EOL, FILE_APPEND);
-}
-
 // 1. Guardar Registro
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] == 'save') {
-    debug_log("Iniciando guardado. Datos recibidos: " . json_encode($_POST));
     
     $usuario = trim($_POST["usuario"] ?? "");
     $clave = trim($_POST["clave"] ?? "");
@@ -78,24 +72,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         if ($stmt = $mysqli->prepare($sql)) {
             $stmt->bind_param("sssssi", $usuario, $clave, $tipo, $link_acceso, $datos_link, $creado_por);
             if ($stmt->execute()) {
-                debug_log("Registro guardado con éxito. ID: " . $mysqli->insert_id);
                 header("Location: index.php?msg=saved");
                 exit;
             } else {
-                $err = "Error execute: " . $stmt->error;
-                debug_log($err);
-                $message = $err;
+                $message = "Error SQL: " . $stmt->error;
                 $message_type = "danger";
             }
             $stmt->close();
-        } else {
-            $err = "Error prepare: " . $mysqli->error;
-            debug_log($err);
-            $message = $err;
-            $message_type = "danger";
         }
-    } else {
-        debug_log("Error: No hay conexión a la DB.");
     }
 }
 
